@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="Nguyen Duy Hoang - 105551448" />
+  <meta name="description" content="Dashboard thống kê khảo sát" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <title>Dashboard - Survey</title>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="header">
+      <h1>Dashboard thống kê khảo sát</h1>
+      <p>Thống kê số phiếu nhập vào và tỷ lệ mức độ đồng ý (1–5)</p>
+    </header>
+
+    <section class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-label">Tổng số phiếu</div>
+        <div class="dash-value" id="totalForms">0</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-label">Tổng lượt chọn (tất cả câu)</div>
+        <div class="dash-value" id="totalAnswers">0</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-label">Số câu / phiếu</div>
+        <div class="dash-value" id="questionCount">-</div>
+      </div>
+    </section>
+
+    <section class="dash-section">
+      <h2>Tỷ lệ lựa chọn tổng hợp</h2>
+      <div id="overallRates" class="rates"></div>
+      <p class="note">* Tỷ lệ được tính trên tất cả lựa chọn của tất cả phiếu (mức 1–5).</p>
+    </section>
+
+    <section class="dash-section">
+      <h2>Danh sách phiếu gần đây</h2>
+      <div id="recentList" class="recent"></div>
+    </section>
+
+    <div class="actions">
+      <button class="btn danger" id="clearDataBtn" type="button">Xoá toàn bộ dữ liệu</button>
+      <a class="btn" href="index.html">Quay lại khảo sát</a>
+    </div>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

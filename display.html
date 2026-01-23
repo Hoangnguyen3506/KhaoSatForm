@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Xem dữ liệu khảo sát</title>
+<style>
+    body { font-family: Arial; margin: 30px; }
+    select, button {
+        padding: 6px 10px;
+        font-size: 14px;
+        margin-right: 10px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 6px;
+        font-size: 13px;
+    }
+    th {
+        background: #f1f5f9;
+    }
+    .count {
+        margin-top: 10px;
+        font-weight: bold;
+    }
+</style>
+</head>
+
+<body>
+
+<h2>Dữ liệu khảo sát</h2>
+
+<select id="tableSelect">
+    <option value="">-- Chọn bảng --</option>
+    <option value="KhaoSat1">Khảo sát 1</option>
+    <option value="KhaoSat2">Khảo sát 2</option>
+    <option value="KhaoSat3">Khảo sát 3</option>
+    <option value="KhaoSat4">Khảo sát 4</option>
+</select>
+
+<button onclick="loadData()">Xem dữ liệu</button>
+
+<div id="count" class="count"></div>
+<table id="dataTable"></table>
+
+<script>
+// const API_URL = "http://localhost:50590/api/database/data";
+const API_URL = "http://cara.isilab.click/api/database/data"; 
+
+/* ===== HÀM LOAD DATA (GLOBAL) ===== */
+function loadData() {
+    const tableName = document.getElementById("tableSelect").value;
+    if (!tableName) {
+        alert("Vui lòng chọn bảng");
+        return;
+    }
+
+    fetch(API_URL + "?tableName=" + tableName)
+        .then(res => {
+            if (!res.ok) throw new Error(res.status);
+            return res.json();
+        })
+        .then(result => {
+            document.getElementById("count").innerText =
+                "Tổng số bản ghi: " + result.TotalCount;
+            renderTable(result.Data);
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Lỗi gọi API");
+        });
+}
+
+/* ===== RENDER TABLE ===== */
+function renderTable(data) {
+    const table = document.getElementById("dataTable");
+    table.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        table.innerHTML = "<tr><td>Không có dữ liệu</td></tr>";
+        return;
+    }
+
+    // Header
+    const header = document.createElement("tr");
+    Object.keys(data[0]).forEach(col => {
+        const th = document.createElement("th");
+        th.innerText = col;
+        header.appendChild(th);
+    });
+    table.appendChild(header);
+
+    // Rows
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        Object.values(row).forEach(val => {
+            const td = document.createElement("td");
+            td.innerText = val ?? "";
+            tr.appendChild(td);
+        });
+        table.appendChild(tr);
+    });
+}
+</script>
+
+</body>
+</html>
