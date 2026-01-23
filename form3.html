@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="Nguyen Duy Hoang - Swinburne" />
+  <meta name="description" content="Insert3 + Survey3 Combined" />
+  <link rel="stylesheet" href="/css/styles3.css" />
+  <title>Form 3 - Doanh nghiệp (Combined)</title>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- =========================
+         1) INSERT 3 (CREDENTIALS)
+    ========================== -->
+    <div class="page" id="credentials" style="margin-bottom:16px;">
+      <div class="page__header">
+        <h1 class="page__title">Nhập thông tin khảo sát doanh nghiệp</h1>
+        <p class="page__subtitle">Nhập thông tin trước, sau đó kéo xuống để đánh giá.</p>
+      </div>
+
+      <div class="page__body">
+
+        <h3>Thông tin bảng khảo sát</h3>
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Tên bảng gốc</div>
+            <input class="control" id="TableBaseName" value="KhaoSat" />
+          </div>
+          <div class="field">
+            <div class="label">Index bảng</div>
+            <input class="control" id="TableIndex" type="number" value="3" />
+          </div>
+        </div>
+
+        <hr class="sep" />
+
+        <h3>Thông tin cá nhân</h3>
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Người nhập</div>
+            <input class="control" id="NguoiNhap" />
+          </div>
+          <div class="field">
+            <div class="label">Ngày khảo sát</div>
+            <input class="control" id="NgayKS" type="date" />
+          </div>
+          <div class="field">
+            <div class="label">Người khảo sát</div>
+            <input class="control" id="NguoiKS" />
+          </div>
+          <div class="field">
+            <div class="label">Người được khảo sát</div>
+            <input class="control" id="NguoiDcKS" />
+          </div>
+          <div class="field">
+            <div class="label">Giới tính</div>
+            <select class="control" id="GioiTinh">
+              <option value="">-- Chọn --</option>
+              <option>Nam</option>
+              <option>Nữ</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">Tuổi</div>
+            <input class="control" id="Tuoi" />
+          </div>
+          <div class="field">
+            <div class="label">Trình độ</div>
+            <input class="control" id="TrinhDo" />
+          </div>
+          <div class="field">
+            <div class="label">Thâm niên</div>
+            <input class="control" id="ThamNien" />
+          </div>
+        </div>
+
+        <hr class="sep" />
+
+        <h3>Thông tin doanh nghiệp</h3>
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Tên doanh nghiệp</div>
+            <input class="control" id="TenDoanhNghiep" />
+          </div>
+          <div class="field">
+            <div class="label">Loại hình</div>
+            <input class="control" id="LoaiHinh" />
+          </div>
+          <div class="field">
+            <div class="label">Lĩnh vực</div>
+            <input class="control" id="LinhVuc" />
+          </div>
+          <div class="field">
+            <div class="label">Năm thành lập</div>
+            <input class="control" id="NamThanhLap" />
+          </div>
+          <div class="field">
+            <div class="label">Quy mô</div>
+            <input class="control" id="QuyMo" />
+          </div>
+          <div class="field">
+            <div class="label">Tổng lao động</div>
+            <input class="control" id="TongLaoDong" />
+          </div>
+        </div>
+
+        <hr class="sep" />
+
+        <h3>Cơ cấu lao động</h3>
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">Lãnh đạo</div>
+            <input class="control" id="LanhDao" />
+          </div>
+          <div class="field">
+            <div class="label">Quản lý</div>
+            <input class="control" id="QuanLy" />
+          </div>
+          <div class="field">
+            <div class="label">Chuyên gia</div>
+            <input class="control" id="ChuyenGia" />
+          </div>
+          <div class="field">
+            <div class="label">Công nhân</div>
+            <input class="control" id="CongNhan" />
+          </div>
+          <div class="field">
+            <div class="label">Đối tượng khác</div>
+            <input class="control" id="DoiTuongKhac" />
+          </div>
+        </div>
+
+        <hr class="sep" />
+
+        <div class="field">
+          <div class="label">Lựa chọn / Ghi chú</div>
+          <textarea class="control textarea" id="LuaChon"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="button" onclick="submitInsert3()">Gửi dữ liệu (Insert)</button>
+          <a class="btn" href="#survey">Xuống phần đánh giá</a>
+        </div>
+
+        <div id="result"></div>
+      </div>
+    </div>
+
+    <!-- =========================
+         2) SURVEY 3 (AGREEMENT)
+    ========================== -->
+    <div id="agreementSection">
+      <form id="surveyForm">
+        <div id="survey" class="page">
+          <div class="page__header">
+            <h2 class="page__title">Phần đánh giá</h2>
+            <p class="page__subtitle">Chọn 1 mức (1–5) cho mỗi dòng.</p>
+          </div>
+
+          <div class="page__body">
+            <div id="surveyContainer"></div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit">Gửi khảo sát</button>
+              <button class="btn" type="button" id="resetBtn">Làm lại</button>
+              <button class="btn" type="button" id="scrollToCredentialsBtn">⬆ Quay lại nhập thông tin</button>
+            </div>
+
+            <p class="note">* Mỗi dòng hãy chọn 1 mức (1–5).</p>
+            <pre id="output" class="output" hidden></pre>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- =========================
+       INSERT3 SCRIPT
+  ========================== -->
+  <script>
+    const API_URL_INSERT3 = "http://cara.isilab.click/api/database/insert3";
+
+    function clearAfterInsert3() {
+      // GIỮ LẠI: baseName, index, nguoiNhap
+      const keepBaseName = document.getElementById("TableBaseName").value;
+      const keepIndex = document.getElementById("TableIndex").value;
+      const keepNguoiNhap = document.getElementById("NguoiNhap").value;
+
+      const idsToClear = [
+        "NgayKS","NguoiKS","NguoiDcKS","GioiTinh","Tuoi","TrinhDo","ThamNien",
+        "TenDoanhNghiep","LoaiHinh","LinhVuc","NamThanhLap","QuyMo","TongLaoDong",
+        "LanhDao","QuanLy","ChuyenGia","CongNhan","DoiTuongKhac","LuaChon"
+      ];
+
+      idsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+
+      document.getElementById("TableBaseName").value = keepBaseName;
+      document.getElementById("TableIndex").value = keepIndex;
+      document.getElementById("NguoiNhap").value = keepNguoiNhap;
+    }
+
+    function submitInsert3() {
+      const data = {
+        TableBaseName: TableBaseName.value,
+        TableIndex: parseInt(TableIndex.value, 10),
+
+        NguoiNhap: NguoiNhap.value,
+        NgayKS: NgayKS.value,
+        NguoiKS: NguoiKS.value,
+        NguoiDcKS: NguoiDcKS.value,
+        GioiTinh: GioiTinh.value,
+        Tuoi: Tuoi.value,
+        TrinhDo: TrinhDo.value,
+        CoQuan: "",
+
+        ViTriCongTac: "",
+        ThamNien: ThamNien.value,
+        TenDoanhNghiep: TenDoanhNghiep.value,
+        LoaiHinh: LoaiHinh.value,
+        LinhVuc: LinhVuc.value,
+        NamThanhLap: NamThanhLap.value,
+        QuyMo: QuyMo.value,
+        TongLaoDong: TongLaoDong.value,
+
+        LanhDao: LanhDao.value,
+        QuanLy: QuanLy.value,
+        ChuyenGia: ChuyenGia.value,
+        CongNhan: CongNhan.value,
+        DoiTuongKhac: DoiTuongKhac.value,
+
+        LuaChon: LuaChon.value
+      };
+
+      fetch(API_URL_INSERT3, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(r => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(res => {
+        document.getElementById("result").innerHTML =
+          `<div class="alert success">✔ ${res.message ?? "Gửi dữ liệu thành công"}</div>`;
+
+        localStorage.setItem("survey_initialized_3", "true");
+
+        // clear theo yêu cầu
+        clearAfterInsert3();
+
+        // scroll xuống survey
+        document.getElementById("survey").scrollIntoView({ behavior: "smooth" });
+      })
+      .catch(err => {
+        document.getElementById("result").innerHTML =
+          `<div class="alert error">❌ Lỗi: ${err.message}</div>`;
+      });
+    }
+  </script>
+
+  <!-- =========================
+       SCROLL BACK TO CREDENTIALS
+  ========================== -->
+  <script>
+    const scrollBtn = document.getElementById("scrollToCredentialsBtn");
+    if (scrollBtn) {
+      scrollBtn.addEventListener("click", () => {
+        const target = document.getElementById("credentials");
+        if (target) target.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  </script>
+
+  <!-- =========================
+       SURVEY 3 SCRIPT (GIỮ NGUYÊN)
+  ========================== -->
+  <script src="/script/form3.js"></script>
+</body>
+</html>

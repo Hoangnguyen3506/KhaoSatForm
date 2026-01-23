@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="Nguyen Duy Hoang - Swinburne" />
+  <meta name="description" content="Insert4 + Survey4 Combined" />
+  <link rel="stylesheet" href="/css/styles4.css" />
+  <title>Form 4 (Combined)</title>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- =========================
+         1) INSERT 4 (CREDENTIALS)
+    ========================== -->
+    <div class="page" id="credentials" style="margin-bottom:16px;">
+      <div class="page__header">
+        <h1 class="page__title">Nhập thông tin khảo sát</h1>
+        <p class="page__subtitle">Nhập thông tin trước, sau đó kéo xuống để đánh giá.</p>
+      </div>
+
+      <div class="page__body">
+        <div class="container">
+          <!-- Hàng 1 -->
+          <div class="row">
+            <div class="col">
+              <label>Người nhập</label>
+              <input id="NguoiNhap" />
+            </div>
+            <div class="col">
+              <label>Ngày khảo sát</label>
+              <input type="date" id="NgayKS" />
+            </div>
+          </div>
+
+          <!-- Hàng 2 -->
+          <div class="row">
+            <div class="col">
+              <label>Người khảo sát</label>
+              <input id="NguoiKS" />
+            </div>
+            <div class="col">
+              <label>Người được khảo sát</label>
+              <input id="NguoiDcKS" />
+            </div>
+          </div>
+
+          <!-- Hàng 3 -->
+          <div class="row">
+            <div class="col">
+              <label>Giới tính</label>
+              <select id="GioiTinh">
+                <option value="">-- Chọn --</option>
+                <option>Nam</option>
+                <option>Nữ</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Tuổi</label>
+              <input id="Tuoi" />
+            </div>
+          </div>
+
+          <!-- Hàng 4 -->
+          <div class="row">
+            <div class="col">
+              <label>Trình độ</label>
+              <input id="TrinhDo" />
+            </div>
+            <div class="col">
+              <label>Thâm niên</label>
+              <input id="ThamNien" />
+            </div>
+          </div>
+
+          <!-- Hàng 5 -->
+          <div class="row">
+            <div class="col">
+              <label>Cơ quan</label>
+              <input id="CoQuan" />
+            </div>
+            <div class="col">
+              <label>Vị trí công tác</label>
+              <input id="ViTriCongTac" />
+            </div>
+          </div>
+
+          <!-- Hàng 6 -->
+          <div class="row">
+            <div class="col">
+              <label>Tên doanh nghiệp</label>
+              <input id="TenDoanhNghiep" />
+            </div>
+            <div class="col">
+              <label>Loại hình</label>
+              <input id="LoaiHinh" />
+            </div>
+          </div>
+
+          <!-- Hàng 7 -->
+          <div class="row">
+            <div class="col">
+              <label>Lĩnh vực</label>
+              <input id="LinhVuc" />
+            </div>
+            <div class="col">
+              <label>Lựa chọn / Ghi chú</label>
+              <textarea id="LuaChon"></textarea>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:12px;">
+            <button class="btn primary" type="button" onclick="submitInsert4()">Gửi dữ liệu (Insert)</button>
+            <a class="btn" href="#survey">Xuống phần đánh giá</a>
+          </div>
+
+          <div id="result" class="msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+         2) SURVEY 4 (AGREEMENT)
+    ========================== -->
+    <div id="agreementSection">
+      <form id="surveyForm">
+        <div id="survey" class="page">
+          <div class="page__header">
+            <h2 class="page__title">Phần đánh giá</h2>
+            <p class="page__subtitle">Chọn 1 mức (1–5) cho mỗi dòng.</p>
+          </div>
+
+          <div class="page__body">
+            <div id="surveyContainer"></div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit">Gửi khảo sát</button>
+              <button class="btn" type="button" id="resetBtn">Làm lại</button>
+              <button class="btn" type="button" id="scrollToCredentialsBtn">⬆ Quay lại nhập thông tin</button>
+            </div>
+
+            <p class="note">* Mỗi dòng hãy chọn 1 mức (1–5).</p>
+            <pre id="output" class="output" hidden></pre>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- =========================
+       INSERT4 SCRIPT
+  ========================== -->
+  <script>
+    const API_URL_INSERT4 = "http://cara.isilab.click/api/database/insert4";
+
+    function clearAfterInsert4() {
+      // Form insert4 không có TableBaseName/TableIndex, nên chỉ giữ NguoiNhap
+      const keepNguoiNhap = document.getElementById("NguoiNhap").value;
+
+      const idsToClear = [
+        "NgayKS","NguoiKS","NguoiDcKS","GioiTinh","Tuoi","TrinhDo","ThamNien",
+        "CoQuan","ViTriCongTac","TenDoanhNghiep","LoaiHinh","LinhVuc","LuaChon"
+      ];
+
+      idsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+
+      document.getElementById("NguoiNhap").value = keepNguoiNhap;
+    }
+
+    function submitInsert4() {
+      const data = {
+        NguoiNhap: NguoiNhap.value,
+        NgayKS: NgayKS.value,
+        NguoiKS: NguoiKS.value,
+        NguoiDcKS: NguoiDcKS.value,
+        GioiTinh: GioiTinh.value,
+        Tuoi: Tuoi.value,
+        TrinhDo: TrinhDo.value,
+        CoQuan: CoQuan.value,
+        ViTriCongTac: ViTriCongTac.value,
+        ThamNien: ThamNien.value,
+        TenDoanhNghiep: TenDoanhNghiep.value,
+        LoaiHinh: LoaiHinh.value,
+        LinhVuc: LinhVuc.value,
+        LuaChon: LuaChon.value
+      };
+
+      fetch(API_URL_INSERT4, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(() => {
+        document.getElementById("result").innerHTML =
+          `<div class="alert success">✔ Gửi dữ liệu thành công</div>`;
+
+        // cờ (nếu mày muốn check)
+        localStorage.setItem("survey_initialized_4", "true");
+
+        // clear theo yêu cầu
+        clearAfterInsert4();
+
+        // scroll xuống survey
+        document.getElementById("survey").scrollIntoView({ behavior: "smooth" });
+      })
+      .catch(err => {
+        document.getElementById("result").innerHTML =
+          `<div class="alert error">❌ Lỗi: ${err.message}</div>`;
+      });
+    }
+  </script>
+
+  <!-- =========================
+       SCROLL BACK TO CREDENTIALS
+  ========================== -->
+  <script>
+    const scrollBtn = document.getElementById("scrollToCredentialsBtn");
+    if (scrollBtn) {
+      scrollBtn.addEventListener("click", () => {
+        const target = document.getElementById("credentials");
+        if (target) target.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  </script>
+
+  <!-- =========================
+       SURVEY 4 SCRIPT (NEW)
+       -> nhớ sửa storage key trong file này (dưới)
+  ========================== -->
+  <script src="./script/form4.js"></script>
+</body>
+</html>

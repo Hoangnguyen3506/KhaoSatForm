@@ -1,8 +1,8 @@
 /* ===============================
    CONFIG
 ================================ */
-const DATA_URL = "question.json";
-const STORAGE_KEY = "survey_submissions";
+const DATA_URL = "/JSON/ques2.json";
+const STORAGE_KEY = "survey_submissions_2";
 const PENDING_KEY = "pending_answers";
 const PENDING_TIME_KEY = "pending_time";
 const scale = [1, 2, 3, 4, 5];

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="author" content="Nguyen Duy Hoang - 105551448" />
   <meta name="description" content="Dashboard thống kê khảo sát" />
-  <link rel="stylesheet" href="./css/styles.css" />
+  <link rel="stylesheet" href="./css/styles12.css" />
   <title>Dashboard - Survey</title>
 </head>
 
@@ -15,6 +15,16 @@
       <h1>Dashboard thống kê khảo sát</h1>
       <p>Thống kê số phiếu nhập vào và tỷ lệ mức độ đồng ý (1–5)</p>
     </header>
+    <label>Chọn form khảo sát</label>
+        <select id="formSelect">
+            <option value="survey_submissions_1">Form 1 – Nhân lực</option>
+            <option value="survey_submissions_2">Form 2 – Doanh nghiệp</option>
+            <option value="survey_submissions_3">Form 3 – Quản lý</option>
+            <option value="survey_submissions_4">Form 4 – Tổng hợp</option>
+        </select>
+
+    <button id="viewBtn" class="btn primary">Xem dashboard</button>
+
 
     <section class="dash-grid">
       <div class="dash-card">
@@ -50,6 +60,6 @@
     </div>
   </div>
 
-  <script src="dashboard.js"></script>
+  <script src="./script/dashboard.js"></script>
 </body>
 </html>

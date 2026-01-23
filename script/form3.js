@@ -1,8 +1,8 @@
 /* ===============================
    CONFIG
 ================================ */
-const DATA_URL = "question.json";
-const STORAGE_KEY = "survey_submissions";
+const DATA_URL = "./JSON/ques3.json";
+const STORAGE_KEY = "survey_submissions_3";
 const scale = [1, 2, 3, 4, 5];
 
 /* ===============================
