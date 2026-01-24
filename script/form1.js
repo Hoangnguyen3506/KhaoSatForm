@@ -3,9 +3,14 @@
 ================================ */
 const DATA_URL = "./JSON/ques1.json";
 const STORAGE_KEY = "survey_submissions_1";
-const PENDING_KEY = "pending_answers";
-const PENDING_TIME_KEY = "pending_time";
 const scale = [1, 2, 3, 4, 5];
+
+// API insert1
+const API_URL = "http://cara.isilab.click/api/database/insert1";
+
+// khóa metadata
+const META_LOCK_KEY = "meta_locked_form1";
+const META_VALUE_KEY = "meta_values_form1";
 
 /* ===============================
    DOM
@@ -14,29 +19,62 @@ const container = document.getElementById("surveyContainer");
 const form = document.getElementById("surveyForm");
 const resetBtn = document.getElementById("resetBtn");
 const output = document.getElementById("output");
-const toCredentialsBtn = document.getElementById("toCredentialsBtn"); // <a> nút điền thông tin
+const resultBox = document.getElementById("result");
+
+// credentials inputs
+const TableBaseName = document.getElementById("TableBaseName");
+const TableIndex = document.getElementById("TableIndex");
+const NguoiNhap = document.getElementById("NguoiNhap");
+
+const NgayKS = document.getElementById("NgayKS");
+const NguoiKS = document.getElementById("NguoiKS");
+const NguoiDcKS = document.getElementById("NguoiDcKS");
+const GioiTinh = document.getElementById("GioiTinh");
+const Tuoi = document.getElementById("Tuoi");
+const TrinhDo = document.getElementById("TrinhDo");
+const CoQuan = document.getElementById("CoQuan");
+const ViTriCongTac = document.getElementById("ViTriCongTac");
 
 /* ===============================
    STATE
 ================================ */
-let groups = [];   // từ JSON
-let flat = [];     // danh sách câu hỏi phẳng
-let answers = [];  // answers[i] = 1..5 hoặc null
+let groups = [];
+let flat = [];
+let answers = [];
 
 /* ===============================
-   HELPERS
+   META LOCK HELPERS
 ================================ */
-function setCredentialsButton(enabled) {
-  if (!toCredentialsBtn) return;
-  if (enabled) toCredentialsBtn.classList.remove("disabled");
-  else toCredentialsBtn.classList.add("disabled");
+function lockCoreFieldsHard() {
+  [TableBaseName, TableIndex, NguoiNhap].forEach((el) => {
+    if (!el) return;
+    el.disabled = true; // KHÓA CỨNG
+  });
 }
 
-/* ===============================
-   INIT BUTTON STATE
-   - chỉ bật khi đã có pending_answers (submit xong)
-================================ */
-setCredentialsButton(!!localStorage.getItem(PENDING_KEY));
+function isMetaLocked() {
+  return localStorage.getItem(META_LOCK_KEY) === "true";
+}
+
+function saveMetaAndLock(base, indexStr, nguoi) {
+  localStorage.setItem(META_VALUE_KEY, JSON.stringify({ base, index: indexStr, nguoi }));
+  localStorage.setItem(META_LOCK_KEY, "true");
+  lockCoreFieldsHard();
+}
+
+function restoreMetaIfLocked() {
+  if (!isMetaLocked()) return;
+  const raw = localStorage.getItem(META_VALUE_KEY);
+  if (!raw) return;
+
+  try {
+    const meta = JSON.parse(raw);
+    if (meta?.base != null) TableBaseName.value = meta.base;
+    if (meta?.index != null) TableIndex.value = meta.index;
+    if (meta?.nguoi != null) NguoiNhap.value = meta.nguoi;
+    lockCoreFieldsHard();
+  } catch {}
+}
 
 /* ===============================
    LOAD QUESTIONS
@@ -47,15 +85,13 @@ fetch(DATA_URL)
     groups = data;
     buildFlat();
     render();
+    restoreMetaIfLocked(); // ✅ F5 vẫn khóa
   })
   .catch((err) => {
-    console.error("❌ Không load được question.json", err);
+    console.error("❌ Không load được ques1.json", err);
     alert("Không thể tải dữ liệu câu hỏi.");
   });
 
-/* ===============================
-   BUILD FLAT LIST (STT 1..60)
-================================ */
 function buildFlat() {
   flat = [];
   let stt = 0;
@@ -70,19 +106,14 @@ function buildFlat() {
   answers = Array(flat.length).fill(null);
 }
 
-/* ===============================
-   RENDER UI
-================================ */
 function render() {
   container.innerHTML = "";
 
   groups.forEach((group, gi) => {
-    // Title
     const title = document.createElement("h3");
     title.textContent = group.title;
     container.appendChild(title);
 
-    // Table
     const table = document.createElement("table");
     table.className = "likert";
 
@@ -107,7 +138,6 @@ function render() {
       .filter((q) => q.groupIndex === gi)
       .forEach((q) => {
         const idx = q.stt - 1;
-
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td class="col-stt">${q.stt}</td>
@@ -118,13 +148,7 @@ function render() {
           const td = document.createElement("td");
           td.className = "rate";
           td.innerHTML = `
-            <input
-              type="radio"
-              name="q${idx}"
-              value="${val}"
-              data-idx="${idx}"
-              ${answers[idx] === val ? "checked" : ""}
-            />
+            <input type="radio" name="q${idx}" value="${val}" data-idx="${idx}">
           `;
           tr.appendChild(td);
         });
@@ -136,41 +160,71 @@ function render() {
   });
 }
 
-/* ===============================
-   RADIO CHANGE (EVENT DELEGATION)
-================================ */
+/* radio change */
 container.addEventListener("change", (e) => {
   const el = e.target;
   if (el && el.matches('input[type="radio"]')) {
-    const idx = Number(el.dataset.idx);
-    answers[idx] = Number(el.value);
+    answers[Number(el.dataset.idx)] = Number(el.value);
   }
 });
 
 /* ===============================
-   SAVE SUBMISSION (LOCAL STORAGE) - cho dashboard
+   LOCAL STORAGE (dashboard)
 ================================ */
 function saveSubmission(answerString) {
   const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-
-  data.push({
-    time: new Date().toISOString(),
-    answers: answerString,
-  });
-
+  data.push({ time: new Date().toISOString(), answers: answerString });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 /* ===============================
-   SUBMIT
-   - validate đủ 60 câu
-   - lưu pending_answers để credentials dùng
-   - lưu survey_submissions để dashboard thống kê
-   - bật nút sang credentials (KHÔNG tự redirect)
+   RESET FOR NEW SLIP
+   - giữ 3 field (đã khóa cứng)
+   - xóa toàn bộ phần còn lại + radio
 ================================ */
-form.addEventListener("submit", (e) => {
+function resetForNewSlip() {
+  // clear credentials khác
+  [NgayKS, NguoiKS, NguoiDcKS, GioiTinh, Tuoi, TrinhDo, CoQuan, ViTriCongTac].forEach((el) => {
+    if (el) el.value = "";
+  });
+
+  // clear output
+  if (output) {
+    output.hidden = true;
+    output.textContent = "";
+  }
+
+  // reset survey
+  answers = Array(flat.length).fill(null);
+  form.reset();
+  render();
+
+  // đảm bảo meta vẫn locked
+  restoreMetaIfLocked();
+
+  // scroll lên để nhập phiếu mới
+  document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
+}
+
+/* ===============================
+   SUBMIT (1 nút = gửi hết)
+================================ */
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // lấy meta (nếu đã disabled thì vẫn đọc được .value bình thường)
+  const base = (TableBaseName.value || "").trim();
+  const indexStr = (TableIndex.value || "").trim();
+  const idx = Number(indexStr);
+  const nguoi = (NguoiNhap.value || "").trim();
+
+  if (!base || !Number.isFinite(idx) || !nguoi) {
+    alert("Bạn cần nhập đủ: Tên bảng gốc, Index, Người nhập.");
+    document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
+    return;
+  }
+
+  // validate survey
   const missing = answers
     .map((v, i) => (v == null ? i + 1 : null))
     .filter(Boolean);
@@ -180,41 +234,63 @@ form.addEventListener("submit", (e) => {
     return;
   }
 
-  const result = answers.join("@");
+  const answerString = answers.join("@");
 
-  // ✅ lưu cho bước credentials
-  localStorage.setItem(PENDING_KEY, result);
-  localStorage.setItem(PENDING_TIME_KEY, new Date().toISOString());
+  // payload insert1 (LuaChon = output)
+  const payload = {
+    TableBaseName: base,
+    TableIndex: idx,
 
-  // ✅ lưu lịch sử để dashboard thống kê
-  saveSubmission(result);
+    NguoiNhap: nguoi,
+    NgayKS: (NgayKS.value || "").trim(),
+    NguoiKS: (NguoiKS.value || "").trim(),
+    NguoiDcKS: (NguoiDcKS.value || "").trim(),
+    GioiTinh: (GioiTinh.value || "").trim(),
+    Tuoi: (Tuoi.value || "").trim(),
+    TrinhDo: (TrinhDo.value || "").trim(),
+    CoQuan: (CoQuan.value || "").trim(),
+    ViTriCongTac: (ViTriCongTac.value || "").trim(),
 
-  // ✅ show output
-  output.hidden = false;
-  output.textContent = result;
+    LuaChon: answerString
+  };
 
-  // ✅ bật nút điền thông tin
-  setCredentialsButton(true);
+  try {
+    const r = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-  console.log("OUTPUT:", result);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const res = await r.json();
+
+    // show result briefly (optional)
+    if (resultBox) {
+      resultBox.innerHTML = `<div class="alert success">✔ ${res.message || "Gửi dữ liệu thành công"} (${res.tableName || ""})</div>`;
+    }
+
+    // dashboard store
+    saveSubmission(answerString);
+
+    // ✅ khóa cứng 3 field từ lần submit đầu tiên
+    if (!isMetaLocked()) {
+      saveMetaAndLock(base, indexStr, nguoi);
+    } else {
+      // đảm bảo vẫn locked
+      restoreMetaIfLocked();
+    }
+
+    // ✅ reset để nhập phiếu mới (giữ 3 field đã khóa)
+    resetForNewSlip();
+
+  } catch (err) {
+    if (resultBox) {
+      resultBox.innerHTML = `<div class="alert error">❌ Lỗi: ${err.message}</div>`;
+    }
+  }
 });
 
-/* ===============================
-   RESET
-   - clear form
-   - clear pending so user phải submit lại
-================================ */
+/* manual reset button */
 resetBtn.addEventListener("click", () => {
-  answers = Array(flat.length).fill(null);
-  form.reset();
-
-  output.hidden = true;
-  output.textContent = "";
-
-  // clear pending
-  localStorage.removeItem(PENDING_KEY);
-  localStorage.removeItem(PENDING_TIME_KEY);
-  setCredentialsButton(false);
-
-  render();
+  resetForNewSlip();
 });
