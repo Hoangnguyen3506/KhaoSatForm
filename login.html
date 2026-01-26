@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
+        .login-box {
+            width: 320px;
+            margin: 150px auto;
+            padding: 50px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        input, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h3>Đăng nhập</h3>
+
+    <input type="text" id="username" placeholder="User name">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p id="msg" style="color:red;"></p>
+</div>
+
+<script>
+async function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+
+    const data = {
+        UserName: user,
+        Password: pass
+    };
+
+    try {
+        const res = await fetch("http://cara.isilab.click/api/Devices/CARAlogin", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.success === true || result.success === "True") {
+            document.getElementById("msg").style.color = "green";
+            document.getElementById("msg").innerText = "Đăng nhập thành công!";
+            localStorage.setItem("logged_user", user);
+            window .location.href = "form1.html";
+            
+        } else {
+            document.getElementById("msg").innerText = "Sai tài khoản hoặc mật khẩu";
+        }
+
+    } catch (err) {
+        document.getElementById("msg").innerText = "Lỗi kết nối server";
+        console.error(err);
+    }
+
+   
+
+}
+</script>
+
+</body>
+</html>

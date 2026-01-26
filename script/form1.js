@@ -1,6 +1,8 @@
 /* ===============================
    CONFIG
 ================================ */
+
+
 const DATA_URL = "./JSON/ques1.json";
 const STORAGE_KEY = "survey_submissions_1";
 const scale = [1, 2, 3, 4, 5];
@@ -45,6 +47,25 @@ let answers = [];
 /* ===============================
    META LOCK HELPERS
 ================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    const user = localStorage.getItem("logged_user");
+
+    if (!user) {
+        // ❌ chưa login
+        alert("Vui lòng đăng nhập trước");
+        window.location.href = "login.html";
+        return;
+    }
+
+    const nguoiNhap = document.getElementById("NguoiNhap");
+    nguoiNhap.value = user;
+
+    // 🔒 KHÓA CỨNG
+    nguoiNhap.readOnly = true;
+    nguoiNhap.classList.add("locked");
+});
+
+
 function lockCoreFieldsHard() {
   [TableBaseName, TableIndex, NguoiNhap].forEach((el) => {
     if (!el) return;

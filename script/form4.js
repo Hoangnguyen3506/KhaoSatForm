@@ -24,6 +24,25 @@ let groups = [];
 let flat = [];
 let answers = [];
 
+
+document.addEventListener("DOMContentLoaded", () => {
+    const user = localStorage.getItem("logged_user");
+
+    if (!user) {
+        // ❌ chưa login
+        alert("Vui lòng đăng nhập trước");
+        window.location.href = "login.html";
+        return;
+    }
+
+    const nguoiNhap = document.getElementById("NguoiNhap");
+    nguoiNhap.value = user;
+
+    // 🔒 KHÓA CỨNG
+    nguoiNhap.readOnly = true;
+    nguoiNhap.classList.add("locked");
+});
+
 /* ===============================
    LOAD QUESTIONS
 ================================ */
