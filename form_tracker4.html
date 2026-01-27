@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="Nguyen Duy Hoang - Swinburne" />
+  <meta name="description" content="Track4 + Survey4 Combined" />
+  <link rel="stylesheet" href="/css/styles4.css" />
+  <title>Tracker Form 4</title>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- =========================
+         1) TRACK + CREDENTIALS
+    ========================== -->
+    <div class="page" id="credentials" style="margin-bottom:16px;">
+      <div class="page__header">
+        <h1 class="page__title">Tra cứu khảo sát Form 4</h1>
+        <p class="page__subtitle">Nhập ID để load dữ liệu đã lưu và hiển thị lên form.</p>
+      </div>
+
+      <div class="page__body">
+        <div class="container">
+
+          <!-- TRACK BOX -->
+          <div class="row">
+            <div class="col">
+              <label>ID</label>
+              <input id="TrackID" placeholder="Nhập ID (vd: 235)" />
+            </div>
+
+            <div class="col" style="display:flex; align-items:flex-end; gap:10px;">
+              <button class="btn" type="button" id="btnTrack4">Tra cứu</button>
+              <span id="trackStatus" style="white-space:nowrap;"></span>
+            </div>
+          </div>
+
+          <hr style="margin: 14px 0; opacity:.4;" />
+
+          <!-- CREDENTIALS -->
+          <div class="row">
+            <div class="col">
+              <label>Người nhập</label>
+              <input id="NguoiNhap" />
+            </div>
+            <div class="col">
+              <label>Ngày khảo sát</label>
+              <input type="date" id="NgayKS" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Người khảo sát</label>
+              <input id="NguoiKS" />
+            </div>
+            <div class="col">
+              <label>Người được khảo sát</label>
+              <input id="NguoiDcKS" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Giới tính</label>
+              <select id="GioiTinh">
+                <option value="">-- Chọn --</option>
+                <option>Nam</option>
+                <option>Nữ</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>Tuổi</label>
+              <input id="Tuoi" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Trình độ</label>
+              <input id="TrinhDo" />
+            </div>
+            <div class="col">
+              <label>Thâm niên</label>
+              <input id="ThamNien" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Cơ quan</label>
+              <input id="CoQuan" />
+            </div>
+            <div class="col">
+              <label>Vị trí công tác</label>
+              <input id="ViTriCongTac" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Tên doanh nghiệp</label>
+              <input id="TenDoanhNghiep" />
+            </div>
+            <div class="col">
+              <label>Loại hình</label>
+              <input id="LoaiHinh" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label>Lĩnh vực</label>
+              <input id="LinhVuc" />
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:12px;">
+            <a class="btn" href="#survey">Xuống phần đánh giá</a>
+          </div>
+
+          <div id="resultTop"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================
+         2) SURVEY 4 (AGREEMENT)
+    ========================== -->
+    <div id="agreementSection">
+      <form id="surveyForm">
+        <div id="survey" class="page">
+          <div class="page__header">
+            <h2 class="page__title">Phần đánh giá</h2>
+            <p class="page__subtitle">Chọn 1 mức (1–5) cho mỗi dòng.</p>
+          </div>
+
+          <div class="page__body">
+            <div id="surveyContainer"></div>
+
+            <div class="actions">
+              <button class="btn primary" type="submit" id="submitAllBtn">Gửi khảo sát</button>
+              <button class="btn" type="button" id="resetBtn">Làm lại</button>
+              <button class="btn" type="button" id="scrollToCredentialsBtn">⬆ Quay lại nhập thông tin</button>
+            </div>
+
+            <div id="resultBottom"></div>
+
+            <p class="note">* Mỗi dòng hãy chọn 1 mức (1–5).</p>
+            <pre id="output" class="output" hidden></pre>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    const scrollBtn = document.getElementById("scrollToCredentialsBtn");
+    if (scrollBtn) {
+      scrollBtn.addEventListener("click", () => {
+        document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  </script>
+
+  <!-- JS mới -->
+  <script src="./script/form4_tracker.js"></script>
+</body>
+</html>
