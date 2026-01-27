@@ -363,7 +363,7 @@ async function trackFetchById(id) {
 
   } catch (err) {
     console.error(err);
-    setTrackStatus("Lỗi API/CORS.");
+    setTrackStatus("Không tìm thấy dữ liệu");
   } finally {
     if (btnTrack) btnTrack.disabled = false;
   }
