@@ -1,59 +1,84 @@
-
-
 /* ===============================
    CONFIG
 ================================ */
-const DATA_URL = "./JSON/ques3.json";          // <-- đổi đúng path JSON form 3 của m
-const STORAGE_KEY = "survey_submissions_3";    // dashboard dùng key này
+const DATA_URL = "./JSON/ques3.json";
+const STORAGE_KEY = "survey_submissions_3";
 const API_URL_INSERT = "http://cara.isilab.click/api/database/insert3";
 
-// LOCK state (để refresh vẫn lock)
 const META_LOCK_KEY = "meta_locked_form3";
-
 const scale = [1, 2, 3, 4, 5];
+
+// STT ranges
+const LIKERT_A_START = 1;
+const LIKERT_A_END = 41;
+
+const MULTI_START = 42;
+const MULTI_END = 59;
+
+const LIKERT_B_START = 60;
+const LIKERT_B_END = 72;
+
+// Multi columns
+const MULTI_COLS = ["hien_dh","hien_cd","hien_nghe","y2030_dh","y2030_cd","y2030_nghe"];
 
 /* ===============================
    DOM
 ================================ */
-const container = document.getElementById("surveyContainer");
+const containerA = document.getElementById("surveyContainer");
+const multiContainer = document.getElementById("multiContainer");
+const containerB = document.getElementById("surveyContainer2");
+
 const form = document.getElementById("surveyForm");
 const resetBtn = document.getElementById("resetBtn");
 const output = document.getElementById("output");
 
-const resultBox = document.getElementById("result"); // vùng hiện thông báo insert
+const resultBox = document.getElementById("result");
 const scrollBtn = document.getElementById("scrollToCredentialsBtn");
-const agreementSection = document.getElementById("agreementSection"); // nếu có thì ẩn sau submit
+const agreementSection = document.getElementById("agreementSection");
 
-// 3 field cần lock
 const elBase = document.getElementById("TableBaseName");
 const elIndex = document.getElementById("TableIndex");
 const elNguoiNhap = document.getElementById("NguoiNhap");
+
+// Open-ended
+const openQ1Radios = document.querySelectorAll('input[name="OpenQ1Radio"]');
+const openQ2 = document.getElementById("OpenQ2");
+const openQ3 = document.getElementById("OpenQ3");
+const openQ4 = document.getElementById("OpenQ4");
+const openQ5 = document.getElementById("OpenQ5");
+const kienNghi = document.getElementById("KienNghi");
 
 /* ===============================
    STATE
 ================================ */
 let groups = [];
 let flat = [];
-let answers = [];
 
+let likertA = [];
+let multiQs = [];
+let likertB = [];
+
+let answersA = [];
+let answersB = [];
+
+/* ===============================
+   LOGIN INIT
+================================ */
 document.addEventListener("DOMContentLoaded", () => {
-    const user = localStorage.getItem("logged_user");
+  const user = localStorage.getItem("logged_user");
 
-    if (!user) {
-        // ❌ chưa login
-        alert("Vui lòng đăng nhập trước");
-        window.location.href = "login.html";
-        return;
-    }
+  if (!user) {
+    alert("Vui lòng đăng nhập trước");
+    window.location.href = "login.html";
+    return;
+  }
 
-    const nguoiNhap = document.getElementById("NguoiNhap");
-    nguoiNhap.value = user;
-
-    // 🔒 KHÓA CỨNG
-    nguoiNhap.readOnly = true;
-    nguoiNhap.classList.add("locked");
+  if (elNguoiNhap) {
+    elNguoiNhap.value = user;
+    elNguoiNhap.readOnly = true;
+    elNguoiNhap.classList.add("locked");
+  }
 });
-
 
 /* ===============================
    META LOCK HELPERS
@@ -61,8 +86,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function lockMetaFields() {
   [elBase, elIndex, elNguoiNhap].forEach((el) => {
     if (!el) return;
-    el.readOnly = true;            // lock
-    el.classList.add("is-locked"); // optional (nếu muốn style)
+    el.readOnly = true;
+    el.classList.add("is-locked");
   });
   localStorage.setItem(META_LOCK_KEY, "true");
 }
@@ -91,7 +116,9 @@ fetch(DATA_URL)
   .then((data) => {
     groups = data;
     buildFlat();
-    render();
+    renderLikert(containerA, likertA, "A");
+    renderMulti();
+    renderLikert(containerB, likertB, "B");
   })
   .catch((err) => {
     console.error("❌ Không load được ques3.json", err);
@@ -99,122 +126,254 @@ fetch(DATA_URL)
   });
 
 /* ===============================
-   BUILD FLAT (STT tăng dần)
+   BUILD FLAT
 ================================ */
 function buildFlat() {
   flat = [];
   let stt = 0;
 
-  groups.forEach((group, gi) => {
+  groups.forEach((group) => {
     (group.items || []).forEach((text) => {
       stt++;
-      flat.push({ stt, groupIndex: gi, text });
+      flat.push({ stt, title: group.title || "", text });
     });
   });
 
-  answers = Array(flat.length).fill(null);
+  likertA = flat.filter(q => q.stt >= LIKERT_A_START && q.stt <= LIKERT_A_END);
+  multiQs  = flat.filter(q => q.stt >= MULTI_START && q.stt <= MULTI_END);
+  likertB = flat.filter(q => q.stt >= LIKERT_B_START && q.stt <= LIKERT_B_END);
+
+  answersA = Array(likertA.length).fill(null);
+  answersB = Array(likertB.length).fill(null);
 }
 
 /* ===============================
-   RENDER UI
+   RENDER LIKERT (generic)
 ================================ */
-function render() {
+function renderLikert(container, list, tag) {
   if (!container) return;
   container.innerHTML = "";
 
-  groups.forEach((group, gi) => {
-    const title = document.createElement("h3");
-    title.textContent = group.title || "";
-    container.appendChild(title);
+  let currentTitle = null;
 
-    const table = document.createElement("table");
-    table.className = "likert";
+  list.forEach((q, localIdx) => {
+    if (q.title !== currentTitle) {
+      currentTitle = q.title;
 
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th class="col-stt">STT</th>
-          <th>Nội dung lấy ý kiến</th>
-          <th colspan="5">Các mức độ đồng ý</th>
-        </tr>
-        <tr>
-          <th></th><th></th>
-          <th class="col-n">1</th>
-          <th class="col-n">2</th>
-          <th class="col-n">3</th>
-          <th class="col-n">4</th>
-          <th class="col-n">5</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
+      const titleEl = document.createElement("h3");
+      titleEl.textContent = currentTitle;
+      container.appendChild(titleEl);
 
+      const table = document.createElement("table");
+      table.className = "likert";
+
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th class="col-stt">STT</th>
+            <th>Nội dung lấy ý kiến</th>
+            <th colspan="5">Các mức độ đồng ý</th>
+          </tr>
+          <tr>
+            <th></th><th></th>
+            <th class="col-n">1</th>
+            <th class="col-n">2</th>
+            <th class="col-n">3</th>
+            <th class="col-n">4</th>
+            <th class="col-n">5</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      container.appendChild(table);
+    }
+
+    const tables = container.querySelectorAll("table.likert");
+    const table = tables[tables.length - 1];
     const tbody = table.querySelector("tbody");
 
-    flat
-      .filter((q) => q.groupIndex === gi)
-      .forEach((q) => {
-        const idx = q.stt - 1;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="col-stt">${q.stt}</td>
+      <td class="statement">${q.text}</td>
+    `;
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="col-stt">${q.stt}</td>
-          <td class="statement">${q.text}</td>
-        `;
+    scale.forEach((val) => {
+      const td = document.createElement("td");
+      td.className = "rate";
+      td.innerHTML = `
+        <input type="radio"
+               name="q${tag}_${localIdx}"
+               value="${val}"
+               data-tag="${tag}"
+               data-idx="${localIdx}" />
+      `;
+      tr.appendChild(td);
+    });
 
-        scale.forEach((val) => {
-          const td = document.createElement("td");
-          td.className = "rate";
-          td.innerHTML = `
-            <input
-              type="radio"
-              name="q${idx}"
-              value="${val}"
-              data-idx="${idx}"
-              ${answers[idx] === val ? "checked" : ""}
-            />
-          `;
-          tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-      });
-
-    container.appendChild(table);
+    tbody.appendChild(tr);
   });
 }
 
 /* ===============================
-   RADIO CHANGE (DELEGATION)
+   RADIO CHANGE (Likert A + B)
 ================================ */
-if (container) {
-  container.addEventListener("change", (e) => {
-    const el = e.target;
-    if (!el || !el.matches('input[type="radio"]')) return;
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if (!el || !el.matches('input[type="radio"][data-tag][data-idx]')) return;
 
-    const idx = Number(el.dataset.idx);
-    answers[idx] = Number(el.value);
+  const tag = el.dataset.tag;
+  const idx = Number(el.dataset.idx);
+  const val = Number(el.value);
+
+  if (tag === "A") answersA[idx] = val;
+  if (tag === "B") answersB[idx] = val;
+});
+
+/* ===============================
+   RENDER MULTI (42..59)
+================================ */
+function renderMulti() {
+  if (!multiContainer) return;
+  multiContainer.innerHTML = "";
+
+  let currentTitle = null;
+
+  multiQs.forEach((q) => {
+    if (q.title !== currentTitle) {
+      currentTitle = q.title;
+
+      const titleEl = document.createElement("h3");
+      titleEl.textContent = currentTitle;
+      multiContainer.appendChild(titleEl);
+
+      const table = document.createElement("table");
+      table.className = "multi-table";
+
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th class="col-stt">STT</th>
+            <th>Nội dung</th>
+            <th>Hiện có: ĐH</th>
+            <th>Hiện có: CĐ</th>
+            <th>Hiện có: Nghề</th>
+            <th>Đến 2030: ĐH</th>
+            <th>Đến 2030: CĐ</th>
+            <th>Đến 2030: Nghề</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      multiContainer.appendChild(table);
+    }
+
+    const tables = multiContainer.querySelectorAll("table.multi-table");
+    const table = tables[tables.length - 1];
+    const tbody = table.querySelector("tbody");
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="col-stt">${q.stt}</td>
+      <td class="statement">${q.text}</td>
+      <td><input class="control" data-row="${q.stt}" data-col="hien_dh"></td>
+      <td><input class="control" data-row="${q.stt}" data-col="hien_cd"></td>
+      <td><input class="control" data-row="${q.stt}" data-col="hien_nghe"></td>
+      <td><input class="control" data-row="${q.stt}" data-col="y2030_dh"></td>
+      <td><input class="control" data-row="${q.stt}" data-col="y2030_cd"></td>
+      <td><input class="control" data-row="${q.stt}" data-col="y2030_nghe"></td>
+    `;
+    tbody.appendChild(tr);
   });
 }
 
 /* ===============================
-   LOCAL STORAGE (DASHBOARD)
+   VALIDATE
 ================================ */
-function saveSubmission(answerString) {
+function getMissingLikert(answersArr, sttStart) {
+  return answersArr
+    .map((v, i) => (v == null ? sttStart + i : null))
+    .filter(Boolean);
+}
+
+function validateMultiRows() {
+  const rows = [...new Set(multiQs.map(q => q.stt))].sort((a,b)=>a-b);
+  for (const row of rows) {
+    const vals = MULTI_COLS.map(col => {
+      const el = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      return (el?.value || "").trim();
+    });
+
+    const any = vals.some(v => v !== "");
+    const all = vals.every(v => v !== "");
+    if (any && !all) return row;
+  }
+  return null;
+}
+
+function getOpenQ1Value() {
+  const checked = [...openQ1Radios].find(r => r.checked);
+  return checked ? checked.value : "";
+}
+
+/* ===============================
+   OUTPUT
+================================ */
+function sanitizeText(s) {
+  return (s || "")
+    .replace(/\r?\n/g, " ")
+    .replace(/@/g, " ")
+    .replace(/\|/g, "/")
+    .trim();
+}
+
+function buildLuaChonOutput() {
+  const partA = answersA.join("@");
+
+  const rows = [...new Set(multiQs.map(q => q.stt))].sort((a,b)=>a-b);
+  const partMulti = rows.map(row => {
+    const vals = MULTI_COLS.map(col => {
+      const el = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      return (el?.value || "").trim();
+    });
+    return vals.join("|");
+  });
+
+  const partB = answersB.join("@");
+
+  // VII + VIII
+  const q1 = getOpenQ1Value(); // 1..5
+  const q2 = sanitizeText(openQ2?.value);
+  const q3 = sanitizeText(openQ3?.value);
+  const q4 = sanitizeText(openQ4?.value);
+  const q5 = sanitizeText(openQ5?.value);
+  const kn = sanitizeText(kienNghi?.value);
+
+  const openParts = [
+    `VII1:${q1}`,
+    `VII2:${q2}`,
+    `VII3:${q3}`,
+    `VII4:${q4}`,
+    `VII5:${q5}`,
+    `VIII:${kn}`
+  ];
+
+  return [partA, ...partMulti, partB, ...openParts].join("@");
+}
+
+/* ===============================
+   LOCAL STORAGE
+================================ */
+function saveSubmission(luaChonOutput) {
   const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  data.push({
-    time: new Date().toISOString(),
-    answers: answerString
-  });
+  data.push({ time: new Date().toISOString(), answers: luaChonOutput });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 /* ===============================
-   BUILD INSERT3 PAYLOAD
-   - LuaChon = output answers "1@2@..."
+   PAYLOAD
 ================================ */
-function buildInsertPayload(answerString) {
-  // helper get value by id
+function buildInsertPayload(luaChonOutput) {
   const v = (id) => (document.getElementById(id)?.value || "").trim();
 
   return {
@@ -245,16 +404,12 @@ function buildInsertPayload(answerString) {
     CongNhan: v("CongNhan"),
     DoiTuongKhac: v("DoiTuongKhac"),
 
-    // ✅ output agreement đẩy lên DB
-    LuaChon: answerString
+    LuaChon: luaChonOutput
   };
 }
 
 /* ===============================
-   AFTER SUCCESS
-   - LOCK 3 meta fields
-   - Clear other inputs
-   - Reset & (optional) hide agreement
+   RESET/CLEAR
 ================================ */
 function clearOtherInputsKeep3() {
   const idsToClear = [
@@ -262,37 +417,49 @@ function clearOtherInputsKeep3() {
     "ThamNien","TenDoanhNghiep","LoaiHinh","LinhVuc","NamThanhLap",
     "QuyMo","TongLaoDong","LanhDao","QuanLy","ChuyenGia","CongNhan",
     "DoiTuongKhac"
-    // NOTE: KHÔNG clear TableBaseName, TableIndex, NguoiNhap
   ];
-
   idsToClear.forEach((id) => {
     const el = document.getElementById(id);
-    if (!el) return;
-    el.value = "";
+    if (el) el.value = "";
   });
+
+  document.querySelectorAll("[data-row][data-col]").forEach(el => el.value = "");
+
+  // open
+  openQ1Radios.forEach(r => r.checked = false);
+  if (openQ2) openQ2.value = "";
+  if (openQ3) openQ3.value = "";
+  if (openQ4) openQ4.value = "";
+  if (openQ5) openQ5.value = "";
+  if (kienNghi) kienNghi.value = "";
 }
 
-function resetAgreementSection() {
-  // reset answers + radios
-  answers = Array(flat.length).fill(null);
-  if (form) form.reset();
+function resetAll() {
+  answersA = Array(likertA.length).fill(null);
+  answersB = Array(likertB.length).fill(null);
+
+  form?.reset();
+
+  document.querySelectorAll("[data-row][data-col]").forEach(el => el.value = "");
+  openQ1Radios.forEach(r => r.checked = false);
 
   if (output) {
     output.hidden = true;
     output.textContent = "";
   }
 
-  render();
+  renderLikert(containerA, likertA, "A");
+  renderLikert(containerB, likertB, "B");
 }
 
 /* ===============================
-   SUBMIT (ONE BUTTON = submit surveyForm)
+   SUBMIT
 ================================ */
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // 1) validate meta fields (tối thiểu)
+    // meta
     const baseName = (elBase?.value || "").trim();
     const idxVal = (elIndex?.value || "").trim();
     const nguoiNhap = (elNguoiNhap?.value || "").trim();
@@ -303,27 +470,42 @@ if (form) {
       return;
     }
 
-    // 2) validate answers
-    const missing = answers
-      .map((v, i) => (v == null ? i + 1 : null))
-      .filter(Boolean);
-
-    if (missing.length) {
-      alert("Chưa chọn mức đánh giá ở STT: " + missing.join(", "));
+    // likert A
+    const missA = getMissingLikert(answersA, LIKERT_A_START);
+    if (missA.length) {
+      alert("Chưa chọn mức đánh giá ở STT: " + missA.join(", "));
       return;
     }
 
-    // 3) build output
-    const answerString = answers.join("@");
-
-    // show output (optional)
-    if (output) {
-      output.hidden = false;
-      output.textContent = answerString;
+    // multi
+    const badRow = validateMultiRows();
+    if (badRow) {
+      alert(`STT ${badRow}: Nếu đã nhập thì cần nhập đủ 6 ô (Hiện có + 2030).`);
+      return;
     }
 
-    // 4) call API insert3
-    const payload = buildInsertPayload(answerString);
+    // likert B
+    const missB = getMissingLikert(answersB, LIKERT_B_START);
+    if (missB.length) {
+      alert("Chưa chọn mức đánh giá ở STT: " + missB.join(", "));
+      return;
+    }
+
+    // open Q1 required? (tuỳ m, t đang bắt buộc cho đúng phiếu)
+    const q1 = getOpenQ1Value();
+    if (!q1) {
+      alert("VII.1: Vui lòng chọn mức độ hài lòng (radio).");
+      return;
+    }
+
+    const luaChonOutput = buildLuaChonOutput();
+
+    if (output) {
+      output.hidden = false;
+      output.textContent = luaChonOutput;
+    }
+
+    const payload = buildInsertPayload(luaChonOutput);
 
     try {
       const r = await fetch(API_URL_INSERT, {
@@ -335,29 +517,18 @@ if (form) {
       if (!r.ok) throw new Error("HTTP " + r.status);
       const res = await r.json().catch(() => ({}));
 
-      // 5) save localStorage for dashboard
-      saveSubmission(answerString);
+      saveSubmission(luaChonOutput);
 
-      // 6) success UI
       if (resultBox) {
         resultBox.innerHTML =
           `<div class="alert success">✔ ${(res.message || "Gửi dữ liệu thành công")} (${res.tableName || "insert3"})</div>`;
       }
 
-      // 7) LOCK 3 fields after submit ✅
       lockMetaFields();
-
-      // 8) clear other inputs & reset agreement (và ẩn nếu muốn)
       clearOtherInputsKeep3();
-      resetAgreementSection();
+      resetAll();
 
-      // nếu m muốn "xóa luôn phần agreement sau khi nộp"
-      // thì HTML cần bọc agreement trong #agreementSection
-      if (agreementSection) {
-        agreementSection.style.display = "none";
-      }
-
-      // scroll lên credentials cho user thấy thông báo
+      if (agreementSection) agreementSection.style.display = "none";
       document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
 
     } catch (err) {
@@ -373,14 +544,11 @@ if (form) {
 
 /* ===============================
    RESET BUTTON
-   - reset agreement
-   - (tuỳ chọn) mở khóa meta nếu m muốn
-   -> hiện tại: reset chỉ reset agreement, KHÔNG tự unlock
 ================================ */
 if (resetBtn) {
   resetBtn.addEventListener("click", () => {
-    resetAgreementSection();
-    // nếu muốn reset cũng UNLOCK luôn thì mở comment dòng dưới:
+    resetAll();
+    if (agreementSection) agreementSection.style.display = "";
     // unlockMetaFields();
   });
 }

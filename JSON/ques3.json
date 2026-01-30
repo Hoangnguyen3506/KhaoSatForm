@@ -4,6 +4,7 @@
     "items": [
       "Hệ thống GD đại học và GD nghề nghiệp hiện nay phù hợp, đào tạo gắn với nhu cầu thực tế của doanh nghiệp, cung cấp nguồn nhân lực chất lượng",
       "Chính sách pháp luật về lao động và đãi ngộ của doanh nghiệp đã tạo môi trường thuận lợi, có hiệu quả trong thu hút và giữ chân NNLCLC",
+      "Doanh nghiệp được hỗ trợ tài chính để đầu tư phát triển NNLCLC",
       "Khoa học công nghệ (KHCN) phát triển đã tạo điều kiện thuận lợi để doanh nghiệp thúc đẩy đổi mới, cải tiến hoạt động sản xuất và kinh doanh",
       "Chính sách phát triển KHCN có tác động rõ rệt đến việc nâng cao năng lực cạnh tranh và thúc đẩy tăng trưởng kinh tế của doanh nghiệp",
       "Doanh nghiệp đã chủ động cải tiến, ứng dụng KHCN vào sản xuất",
@@ -82,6 +83,9 @@
     ]
   },
   {
+    "title": "NHU CẦU NGUỒN NHÂN LỰC CHẤT LƯỢNG CAO CỦA DOANH NGHIỆP ĐẾN NĂM 2030"
+  },
+  {
     "title": "Tiêu chí NNLCLC tương lai cần đạt được",
     "items": [
       "Có trình độ học vấn/chuyên môn nghiệp vụ từ đại học trở lên hoặc trình độ nghề sâu, với kiến thức chuyên ngành được đào tạo bài bản",
@@ -93,24 +97,72 @@
     ]
   },
   {
-    "title": "4.Một số yếu tố ảnh hướng đến phát triển NNLCLC tại các doanh nghiệp",
+    "title" : "Công nghệ thông tin & Chuyển đổi số", 
     "items": [
-      "Chính sách pháp luật về lao động và đãi ngộ của doanh nghiệp đã tạo môi trường thuận lợi, có hiệu quả trong thu hút và giữ chân NNLCLC",
-  		"Chính sách pháp luật về lao động và đãi ngộ của doanh nghiệp đã tạo môi trường thuận lợi, có hiệu quả trong thu hút và giữ chân NNLCLC",
-		  "Xây dựng chiến lược phát triển và kế hoạch sản xuất kinh doanh hằng năm",
-		  "Xây dựng chiến lược phát triển NNLCLC dựa trên chiến lược phát triển và kế hoạch sản xuất kinh doanh của doanh nghiệp",
-		  "Doanh nghiệp có sự điều chỉnh về số lượng, cơ cấu, chất lượng của NNLCLC để đáp ứng kịp thời trong từng giai đoạn",
-		  "Mức độ cải thiện trình độ nghề nghiệp, hiệu quả làm việc của người lao động sau các chương trình đào tạo, phát triển tại doanh nghiệp",
-		  "Mức độ cải thiện hiệu quả hoạt động của toàn đơn vị sau các chương trình đào tạo, phát triển tại doanh nghiệp",
-		  "Chính sách tuyển dụng, sử dụng, đãi ngộ với NNLCLC là phù hợp",
-		  "Chính sách đào tạo, bồi dưỡng của địa phương, Nhà nước rất tốt",
-		  "Chất lượng đào tạo của các cơ sở đào tạo đảm bảo NNLCLC có đủ kiến thức, kỹ năng chuyên môn và khả năng thích ứng cao",
-		  "Các cơ sở đào tạo đủ khả năng cung cấp NNLCLC đáp ứng nhu cầu tuyển dụng của doanh nghiệp",
-		  "Hợp tác giữa doanh nghiệp – nhà trường trong đào tạo, phát triển NNLCLC"
-
+      "Công nghệ thông tin, an ninh mạng, an toàn thông tin, trí tuệ nhân tạo (AI), dữ liệu lớn (Big Data), IoT, Blockchain",
+      "Phát triển hạ tầng số, chính phủ số, kinh tế số"
+    ]
+  }, 
+  {
+    "title" : "Công nghệ cao trong sản xuất – công nghiệp",
+    "items": [
+      "Cơ khí – Tự động hóa – Robot công nghiệp",
+      "Công nghiệp điện tử, viễn thông, bán dẫn, hàng không vũ trụ",
+      "Công nghiệp dệt may"
+    ]
+  },
+  {
+    "title" : "Năng lượng & Môi trường",
+    "items": [
+      "Năng lượng tái tạo và kỹ thuật môi trường (điện gió, điện mặt trời, hydro xanh, xử lý chất thải)",
+      "Công nghệ sinh học, công nghệ nano, vật liệu mới",
+      "Ứng phó biến đổi khí hậu, đô thị thông minh bền vững"
+    ]
+  },
+  {
+    "title" : "Kinh tế – Tài chính – Dịch vụ cao cấp", 
+    "items": [
+      "Kế toán - Tài chính - Ngân hàng - Chứng khoán - Bảo hiểm",
+      "Logistics, chuỗi cung ứng thông minh toàn cầu",
+      "Quản trị kinh doanh, quản trị công nghệ, quản trị nhân lực",
+      "Marketing số, thương mại điện tử",
+      "Du lịch, khách sạn, dịch vụ cao cấp đạt chuẩn quốc tế"
+    ]
+  },
+  {
+    "title" : "Y tế & Sức khỏe",
+    "items": [
+      "Công nghệ dược phẩm, y học tái tạo, công nghệ sinh học y tế",
+      "Chăm sóc sức khỏe thông minh, bệnh viện thông minh"
+    ]
+  },
+  {
+    "title" : "Lĩnh vực, ngành/nghề khác:", 
+    "items": [
+      "Công nghiệp sạch",
+      "Nông nghiệp công nghệ cao",
+      "…………………………………………………………………"
+    ]
+  },
+  {
+    "title": "CÁC YẾU TỐ ẢNH HƯỞNG ĐẾN PHÁT TRIỂN NNLCLC TẠI DOANH NGHIỆP",
+    "items": [
+      "Việc phát triển NNLCLC là yếu tố then chốt quyết định đến sự điều chỉnh về quy mô và cơ cấu nhân sự của doanh nghiệp",
+      "Chính sách phát triển NNLCLC có tác động mạnh mẽ đến việc cải thiện chất lượng và nâng cao năng lực làm việc của người lao động",
+      "Sự phát triển NNLCLC đáp ứng được yêu cầu sử dụng NNLCLC và luôn phù hợp với kế hoạch sản xuất - kinh doanh của doanh nghiệp",
+      "Xây dựng chiến lược phát triển và kế hoạch sản xuất kinh doanh hằng năm",
+      "Xây dựng chiến lược phát triển NNLCLC dựa trên chiến lược phát triển và kế hoạch sản xuất kinh doanh của doanh nghiệp",
+      "Doanh nghiệp có sự điều chỉnh về số lượng, cơ cấu, chất lượng của NNLCLC để đáp ứng kịp thời trong từng giai đoạn",
+      "Mức độ cải thiện trình độ nghề nghiệp, hiệu quả làm việc của người lao động sau các chương trình đào tạo, phát triển tại doanh nghiệp",
+      "Mức độ cải thiện hiệu quả hoạt động của toàn đơn vị sau các chương trình đào tạo, phát triển tại doanh nghiệp",
+      "Chính sách tuyển dụng, sử dụng, đãi ngộ với NNLCLC là phù hợp",
+      "Chính sách đào tạo, bồi dưỡng của địa phương, Nhà nước rất tốt",
+      "Chất lượng đào tạo của các cơ sở đào tạo đảm bảo NNLCLC có đủ kiến thức, kỹ năng chuyên môn và khả năng thích ứng cao",
+      "Các cơ sở đào tạo đủ khả năng cung cấp NNLCLC đáp ứng nhu cầu tuyển dụng của doanh nghiệp",
+      "Hợp tác giữa doanh nghiệp – nhà trường trong đào tạo, phát triển NNLCLC"
     ]
   }
- 
+  
 
 
 

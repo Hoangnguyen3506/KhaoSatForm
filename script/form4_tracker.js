@@ -1,70 +1,117 @@
 /* ===============================
-   CONFIG (FORM 4)
+   TRACK FORM 4 (TRACK + EDIT + RESUBMIT)
+   - Likert: from ques4.json (rendered)
+   - Track by ID: /api/database/khaosat4/{id}
+   - Submit back: /api/database/insert4
+   - Extra text:
+      + Câu 52: TEXTAREA id="Cau52"
+      + Open-ended: Cau53..Cau58 (TEXTAREA)
+   - Supports open/text from:
+      + columns (Cau52..Cau58)
+      + OR tokens in LuaChon tail: "Cau52:..." etc.
 ================================ */
+
 const DATA_URL = "./JSON/ques4.json";
-const STORAGE_KEY = "survey_submissions_4";
 const API_URL_INSERT4 = "http://cara.isilab.click/api/database/insert4";
 const API_URL_TRACK4  = "http://cara.isilab.click/api/database/khaosat4"; // /{id}
 const scale = [1, 2, 3, 4, 5];
 
-/* ===============================
-   DOM
-================================ */
+/* DOM */
 const container = document.getElementById("surveyContainer");
 const form = document.getElementById("surveyForm");
 const resetBtn = document.getElementById("resetBtn");
 const output = document.getElementById("output");
-
 const resultTop = document.getElementById("resultTop");
 const resultBottom = document.getElementById("resultBottom");
 
-// tracker elements (chỉ có ở tracker page)
 const trackIdEl = document.getElementById("TrackID");
 const btnTrack = document.getElementById("btnTrack4");
 const trackStatus = document.getElementById("trackStatus");
 const IS_TRACK_MODE = Boolean(trackIdEl && btnTrack);
 
-/* ===============================
-   STATE
-================================ */
+const sttEl = document.getElementById("STT");
+
+/* textareas */
+const elC52 = document.getElementById("Cau52");
+const elC53 = document.getElementById("Cau53");
+const elC54 = document.getElementById("Cau54");
+const elC55 = document.getElementById("Cau55");
+const elC56 = document.getElementById("Cau56");
+const elC57 = document.getElementById("Cau57");
+const elC58 = document.getElementById("Cau58");
+
+/* STATE */
 let groups = [];
 let flat = [];
 let answers = [];
-let pendingLuaChon = null; // nếu fetch track về trước khi ques4 load xong
+let pendingRow = null; // nếu track về trước khi ques load xong
 
 /* ===============================
-   AUTH / LOGIN
+   HELPERS
 ================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  const user = localStorage.getItem("logged_user");
+function setTrackStatus(msg) {
+  if (trackStatus) trackStatus.textContent = msg || "";
+}
 
-  if (!user) {
-    alert("Vui lòng đăng nhập trước");
-    window.location.href = "login.html";
-    return;
-  }
+function normalizeTrackPayload(payload) {
+  if (!payload) return null;
+  if (payload.data !== undefined) payload = payload.data;
+  if (payload.result !== undefined) payload = payload.result;
+  if (Array.isArray(payload)) payload = payload[0] ?? null;
+  return payload;
+}
 
-  const nguoiNhap = document.getElementById("NguoiNhap");
+function getFieldLoose(row, wantedKey) {
+  if (!row || !wantedKey) return "";
+  const target = String(wantedKey).toLowerCase().trim();
 
-  // Form thường: auto set + lock
-  // Tracker: không ép override (vì đang load record theo ID),
-  // nhưng vẫn có thể gợi ý bằng placeholder
-  if (nguoiNhap) {
-    if (!IS_TRACK_MODE) {
-      nguoiNhap.value = user;
-      nguoiNhap.readOnly = true;
-      nguoiNhap.classList.add("locked");
-    } else {
-      if (!nguoiNhap.value) nguoiNhap.placeholder = `Đăng nhập: ${user}`;
-      // nếu m vẫn muốn lock cả tracker thì uncomment:
-      // nguoiNhap.readOnly = true;
-      // nguoiNhap.classList.add("locked");
+  for (const k of Object.keys(row)) {
+    const rawKey = String(k);
+    const lk = rawKey.toLowerCase().trim();
+    const lkNoPrefix = lk.includes(":") ? lk.split(":").pop().trim() : lk;
+
+    if (lkNoPrefix === target || lkNoPrefix.includes(target)) {
+      const v = row[k];
+      return v == null ? "" : String(v);
     }
   }
-});
+  return "";
+}
+
+function parseLuaChonTokens(luaChon) {
+  const parts = String(luaChon || "").split("@");
+  const tokens = {};
+  parts.forEach(p => {
+    const s = String(p || "");
+    const idx = s.indexOf(":");
+    if (idx > 0) {
+      const k = s.slice(0, idx).trim();
+      const v = s.slice(idx + 1).trim();
+      if (k) tokens[k] = v;
+    }
+  });
+  return tokens;
+}
+
+function getTextValueFromRowOrToken(row, key) {
+  // ưu tiên cột riêng
+  const direct = getFieldLoose(row, key);
+  if (direct) return direct;
+
+  // fallback: token trong LuaChon
+  const lua = getFieldLoose(row, "LuaChon");
+  if (!lua) return "";
+  const tokens = parseLuaChonTokens(lua);
+  return tokens[key] ?? "";
+}
+
+function showMsg(el, html, type) {
+  if (!el) return;
+  el.innerHTML = `<div class="alert ${type || "info"}">${html}</div>`;
+}
 
 /* ===============================
-   LOAD QUESTIONS
+   LOAD QUESTIONS (LIKERT)
 ================================ */
 fetch(DATA_URL)
   .then(res => res.json())
@@ -73,10 +120,10 @@ fetch(DATA_URL)
     buildFlat();
     render();
 
-    // nếu tracker đã fetch về sớm
-    if (pendingLuaChon) {
-      applyLuaChonToAnswers(pendingLuaChon);
-      pendingLuaChon = null;
+    // nếu track row về trước
+    if (pendingRow) {
+      applyRowToUI(pendingRow);
+      pendingRow = null;
     }
   })
   .catch(err => {
@@ -89,7 +136,7 @@ function buildFlat() {
   let stt = 0;
 
   groups.forEach((group, gi) => {
-    group.items.forEach(text => {
+    (group.items || []).forEach(text => {
       stt++;
       flat.push({ stt, groupIndex: gi, text });
     });
@@ -99,7 +146,7 @@ function buildFlat() {
 }
 
 /* ===============================
-   RENDER
+   RENDER LIKERT
 ================================ */
 function render() {
   if (!container) return;
@@ -174,15 +221,6 @@ if (container) {
 }
 
 /* ===============================
-   LOCAL STORAGE (dashboard)
-================================ */
-function saveSubmission(answerString) {
-  const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  data.push({ time: new Date().toISOString(), answers: answerString });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-/* ===============================
    VALIDATE
 ================================ */
 function getMissingQuestions() {
@@ -192,23 +230,50 @@ function getMissingQuestions() {
 }
 
 /* ===============================
-   GET INSERT PAYLOAD
+   BUILD PAYLOAD SUBMIT
+   - LuaChon: likert answers + tokens for C52..C58
 ================================ */
+function buildLuaChonForSubmit() {
+  const likert = answers.map(v => (v == null ? "" : String(v))).join("@");
+
+  const c52 = (elC52?.value || "").trim();
+  const c53 = (elC53?.value || "").trim();
+  const c54 = (elC54?.value || "").trim();
+  const c55 = (elC55?.value || "").trim();
+  const c56 = (elC56?.value || "").trim();
+  const c57 = (elC57?.value || "").trim();
+  const c58 = (elC58?.value || "").trim();
+
+  const tailTokens = [
+    `Cau52:${c52}`,
+    `Cau53:${c53}`,
+    `Cau54:${c54}`,
+    `Cau55:${c55}`,
+    `Cau56:${c56}`,
+    `Cau57:${c57}`,
+    `Cau58:${c58}`
+  ].join("@");
+
+  return likert + "@" + tailTokens;
+}
+
 function buildInsertPayload(luaChonOutput) {
+  const v = (id) => (document.getElementById(id)?.value || "").trim();
+
   return {
-    NguoiNhap: document.getElementById("NguoiNhap")?.value || "",
-    NgayKS: document.getElementById("NgayKS")?.value || "",
-    NguoiKS: document.getElementById("NguoiKS")?.value || "",
-    NguoiDcKS: document.getElementById("NguoiDcKS")?.value || "",
-    GioiTinh: document.getElementById("GioiTinh")?.value || "",
-    Tuoi: document.getElementById("Tuoi")?.value || "",
-    TrinhDo: document.getElementById("TrinhDo")?.value || "",
-    CoQuan: document.getElementById("CoQuan")?.value || "",
-    ViTriCongTac: document.getElementById("ViTriCongTac")?.value || "",
-    ThamNien: document.getElementById("ThamNien")?.value || "",
-    TenDoanhNghiep: document.getElementById("TenDoanhNghiep")?.value || "",
-    LoaiHinh: document.getElementById("LoaiHinh")?.value || "",
-    LinhVuc: document.getElementById("LinhVuc")?.value || "",
+    NguoiNhap: v("NguoiNhap"),
+    NgayKS: v("NgayKS"),
+    NguoiKS: v("NguoiKS"),
+    NguoiDcKS: v("NguoiDcKS"),
+    GioiTinh: v("GioiTinh"),
+    Tuoi: v("Tuoi"),
+    TrinhDo: v("TrinhDo"),
+    CoQuan: v("CoQuan"),
+    ViTriCongTac: v("ViTriCongTac"),
+    ThamNien: v("ThamNien"),
+    TenDoanhNghiep: v("TenDoanhNghiep"),
+    LoaiHinh: v("LoaiHinh"),
+    LinhVuc: v("LinhVuc"),
     LuaChon: luaChonOutput
   };
 }
@@ -219,7 +284,6 @@ function buildInsertPayload(luaChonOutput) {
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     if (resultTop) resultTop.innerHTML = "";
     if (resultBottom) resultBottom.innerHTML = "";
 
@@ -229,8 +293,8 @@ if (form) {
       return;
     }
 
-    const answerString = answers.join("@");
-    const payload = buildInsertPayload(answerString);
+    const luaChon = buildLuaChonForSubmit();
+    const payload = buildInsertPayload(luaChon);
 
     try {
       const r = await fetch(API_URL_INSERT4, {
@@ -239,34 +303,44 @@ if (form) {
         body: JSON.stringify(payload)
       });
 
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      await r.json().catch(() => null);
+      const text = await r.text().catch(() => "");
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
 
-      saveSubmission(answerString);
+      if (!r.ok) {
+        console.error("INSERT4 HTTP", r.status, json || text);
+        showMsg(resultBottom, `❌ Lỗi submit: ${(json?.Message || json?.message || text || ("HTTP " + r.status))}`, "error");
+        return;
+      }
 
       if (output) {
         output.hidden = false;
-        output.textContent = answerString;
+        output.textContent = luaChon;
       }
 
-      const okHtml = `<div class="alert success">✔ Đã gửi dữ liệu thành công (Insert4 + Khảo sát).</div>`;
-      if (resultBottom) resultBottom.innerHTML = okHtml;
-
+      showMsg(resultBottom, "✔ Đã gửi dữ liệu thành công (Insert4 + Khảo sát).", "success");
     } catch (err) {
       console.error(err);
-      const errHtml = `<div class="alert error">❌ Lỗi: ${err.message}</div>`;
-      if (resultBottom) resultBottom.innerHTML = errHtml;
+      showMsg(resultBottom, `❌ Lỗi: ${err.message}`, "error");
     }
   });
 }
 
 /* ===============================
-   RESET (survey only)
+   RESET
 ================================ */
 if (resetBtn) {
   resetBtn.addEventListener("click", () => {
     answers = Array(flat.length).fill(null);
     form?.reset();
+
+    if (elC52) elC52.value = "";
+    if (elC53) elC53.value = "";
+    if (elC54) elC54.value = "";
+    if (elC55) elC55.value = "";
+    if (elC56) elC56.value = "";
+    if (elC57) elC57.value = "";
+    if (elC58) elC58.value = "";
 
     if (output) {
       output.hidden = true;
@@ -279,23 +353,48 @@ if (resetBtn) {
 }
 
 /* ===============================
-   TRACK HELPERS
+   TRACK MODE
 ================================ */
-function setTrackStatus(msg) {
-  if (trackStatus) trackStatus.textContent = msg || "";
+async function trackFetchById(id) {
+  setTrackStatus("Đang tải...");
+  if (btnTrack) btnTrack.disabled = true;
+
+  try {
+    const res = await fetch(`${API_URL_TRACK4}/${encodeURIComponent(id)}`, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const json = await res.json();
+    const row = normalizeTrackPayload(json);
+
+    if (!row) {
+      setTrackStatus("Không có dữ liệu.");
+      return;
+    }
+
+    // nếu ques chưa load xong
+    if (!flat.length) {
+      pendingRow = row;
+    } else {
+      applyRowToUI(row);
+    }
+
+    setTrackStatus("Đã hiển thị ✅");
+    setTimeout(() => setTrackStatus(""), 2000);
+
+  } catch (err) {
+    console.error(err);
+    setTrackStatus("Không tìm thấy dữ liệu");
+  } finally {
+    if (btnTrack) btnTrack.disabled = false;
+  }
 }
 
-function normalizeTrackPayload(payload) {
-  if (!payload) return null;
-  if (payload.data !== undefined) payload = payload.data;
-  if (payload.result !== undefined) payload = payload.result;
-  if (Array.isArray(payload)) payload = payload[0] ?? null;
-  return payload;
-}
-
-function fillCredentialsFromData(data) {
+function fillCredentialsFromRow(row) {
   const ids = [
-    "NguoiNhap","NgayKS","NguoiKS","NguoiDcKS","GioiTinh","Tuoi",
+    "STT","NguoiNhap","NgayKS","NguoiKS","NguoiDcKS","GioiTinh","Tuoi",
     "TrinhDo","ThamNien","CoQuan","ViTriCongTac",
     "TenDoanhNghiep","LoaiHinh","LinhVuc"
   ];
@@ -303,18 +402,15 @@ function fillCredentialsFromData(data) {
   ids.forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.value = data?.[id] ?? "";
+    el.value = getFieldLoose(row, id) || "";
   });
+
+  // STT readonly
+  if (sttEl) sttEl.readOnly = true;
 }
 
 function applyLuaChonToAnswers(luaChon) {
   if (!luaChon || typeof luaChon !== "string") return;
-
-  // nếu câu hỏi chưa load xong
-  if (!flat || !flat.length) {
-    pendingLuaChon = luaChon;
-    return;
-  }
 
   const parts = luaChon.split("@");
   answers = Array(flat.length).fill(null);
@@ -333,40 +429,25 @@ function applyLuaChonToAnswers(luaChon) {
   }
 }
 
-/* ===============================
-   TRACK MODE
-================================ */
-async function trackFetchById(id) {
-  setTrackStatus("Đang tải...");
-  if (btnTrack) btnTrack.disabled = true;
+function fillText52AndOpen(row) {
+  // ưu tiên cột riêng, fallback token trong LuaChon
+  if (elC52) elC52.value = getTextValueFromRowOrToken(row, "Cau52");
+  if (elC53) elC53.value = getTextValueFromRowOrToken(row, "Cau53");
+  if (elC54) elC54.value = getTextValueFromRowOrToken(row, "Cau54");
+  if (elC55) elC55.value = getTextValueFromRowOrToken(row, "Cau55");
+  if (elC56) elC56.value = getTextValueFromRowOrToken(row, "Cau56");
+  if (elC57) elC57.value = getTextValueFromRowOrToken(row, "Cau57");
+  if (elC58) elC58.value = getTextValueFromRowOrToken(row, "Cau58");
+}
 
-  try {
-    const res = await fetch(`${API_URL_TRACK4}/${encodeURIComponent(id)}`, {
-      method: "GET",
-      headers: { "Accept": "application/json" }
-    });
-    if (!res.ok) throw new Error("HTTP " + res.status);
+function applyRowToUI(row) {
+  fillCredentialsFromRow(row);
 
-    const json = await res.json();
-    const data = normalizeTrackPayload(json);
+  const lua = getFieldLoose(row, "LuaChon");
+  applyLuaChonToAnswers(lua);
 
-    if (!data) {
-      setTrackStatus("Không có dữ liệu.");
-      return;
-    }
-
-    fillCredentialsFromData(data);
-    applyLuaChonToAnswers(data.LuaChon);
-
-    setTrackStatus("Đã hiển thị ✅");
-    setTimeout(() => setTrackStatus(""), 2000);
-
-  } catch (err) {
-    console.error(err);
-    setTrackStatus("Không tìm thấy dữ liệu");
-  } finally {
-    if (btnTrack) btnTrack.disabled = false;
-  }
+  fillText52AndOpen(row);
+  console.log("TRACK row keys:", Object.keys(row));
 }
 
 function initTrackerIfPresent() {

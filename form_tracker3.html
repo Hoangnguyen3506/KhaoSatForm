@@ -4,15 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="author" content="Nguyen Duy Hoang - Swinburne" />
-  <meta name="description" content="Insert3 + Survey3 Combined" />
+  <meta name="description" content="Track Form 3" />
   <link rel="stylesheet" href="/css/styles3.css" />
-  <title>Form 3 - Doanh nghiệp (Combined)</title>
+  <title>Track Form 3 - Doanh nghiệp</title>
 
   <style>
     .multi-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     .multi-table th, .multi-table td { border: 1px solid #ddd; padding: 8px; vertical-align: middle; }
     .multi-table th { background: #f7f7f7; }
     .multi-table input.control { width: 100%; box-sizing: border-box; }
+
     .muted { opacity: .75; font-size: 13px; margin: 6px 0 0; }
 
     .open-grid { display: grid; gap: 12px; margin-top: 8px; }
@@ -21,6 +22,7 @@
     .radio-row { display: flex; flex-wrap: wrap; gap: 14px; padding: 6px 0; }
     .radio-item { display: inline-flex; align-items: center; gap: 6px; }
     .radio-item input { transform: translateY(1px); }
+
     .block-title { margin-top: 12px; }
   </style>
 </head>
@@ -29,12 +31,45 @@
   <div class="wrap">
 
     <!-- =========================
-         CREDENTIALS (INSERT 3)
+         TRACK BAR (ID + STT)
+    ========================== -->
+    <div class="page" style="margin-bottom:16px;">
+      <div class="page__header">
+        <h1 class="page__title">Tra cứu Form 3</h1>
+        <p class="page__subtitle">Nhập ID (ưu tiên) hoặc STT để load dữ liệu người dùng đã nhập/chọn.</p>
+      </div>
+
+      <div class="page__body">
+        <div class="form-grid">
+          <div class="field">
+            <div class="label">ID</div>
+            <input class="control" id="TrackID" type="number" placeholder="Ví dụ: 3" />
+          </div>
+
+          <div class="field">
+            <div class="label">STT</div>
+            <input class="control" id="TrackSTT" type="number" placeholder="Ví dụ: 70" />
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn primary" type="button" id="btnLoadTrack">Tra cứu</button>
+          <button class="btn" type="button" id="btnClearLoaded">Clear</button>
+          <button class="btn" type="button" id="btnScrollSurvey">⬇ Xuống phần đánh giá</button>
+          <button class="btn" type="button" id="btnScrollCredentials">⬆ Về phần thông tin</button>
+        </div>
+
+        <div id="trackResult" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- =========================
+         CREDENTIALS (EDITABLE)
     ========================== -->
     <div class="page" id="credentials" style="margin-bottom:16px;">
       <div class="page__header">
-        <h1 class="page__title">Nhập thông tin khảo sát doanh nghiệp</h1>
-        <p class="page__subtitle">Nhập thông tin trước, sau đó kéo xuống để đánh giá.</p>
+        <h2 class="page__title">Thông tin khảo sát</h2>
+        <p class="page__subtitle">Load xong có thể sửa và gửi lại bằng form thường (nếu m muốn).</p>
       </div>
 
       <div class="page__body">
@@ -149,27 +184,22 @@
           </div>
         </div>
 
-        <div id="result" style="margin-top:12px;"></div>
-
         <div class="actions" style="margin-top:12px;">
           <a class="btn" href="#survey">Xuống phần đánh giá</a>
         </div>
+
+        <div id="result" style="margin-top:12px;"></div>
       </div>
     </div>
 
     <!-- =========================
-         SURVEY (đúng thứ tự STT)
-         1..41: Likert (#surveyContainer)
-         42..59: Multi (#multiContainer)
-         60..72: Likert (#surveyContainer2)
-         VII: Open Q (#openSection)
-         VIII: Kien nghi (#proposalSection)
+         SURVEY (VIEW/EDIT)
     ========================== -->
     <form id="surveyForm">
       <div id="survey" class="page">
         <div class="page__header">
           <h2 class="page__title">Phần đánh giá</h2>
-          <p class="page__subtitle">Form tự chia theo STT và phần câu hỏi mở.</p>
+          <p class="page__subtitle">Sau khi tra cứu, các lựa chọn sẽ được tick lại đúng như dữ liệu DB.</p>
         </div>
 
         <div class="page__body">
@@ -180,8 +210,7 @@
           <hr class="sep" />
           <h3 class="block-title">NHU CẦU NNLCLC ĐẾN NĂM 2030 (STT 42–59)</h3>
           <p class="muted">
-            Output mỗi STT = <b>Hiện_ĐH|Hiện_CĐ|Hiện_Nghề|2030_ĐH|2030_CĐ|2030_Nghề</b>,
-            các STT nối bằng <b>@</b>.
+            Mỗi STT gồm 6 ô: Hiện có (ĐH/CĐ/Nghề) + Đến 2030 (ĐH/CĐ/Nghề).
           </p>
           <div id="multiContainer"></div>
 
@@ -194,45 +223,37 @@
           <hr class="sep" />
           <h3 class="block-title">VII. CÂU HỎI MỞ</h3>
 
-          <div class="field">
+         <div class="field">
             <div class="label">
-             1. Ông/Bà cho biết mức độ hài lòng của doanh nghiệp khi tuyển dụng NNLCLC tốt nghiệp từ các cơ sở đào tạo trong tỉnh?
+              1. Ông/Bà cho biết mức độ hài lòng của doanh nghiệp khi tuyển dụng NNLCLC tốt nghiệp từ các cơ sở đào tạo trong tỉnh?
             </div>
-            <textarea class="control" id="OpenQ1Text" placeholder="Nhập nội dung..."></textarea>
+            <textarea class="control" id="OpenQ1" placeholder="Nhập nội dung..."></textarea>
           </div>
 
 
           <div class="open-grid" id="openSection">
             <div class="field">
-              <div class="label">
-                2. Theo Ông/Bà, thách thức lớn nhất của doanh nghiệp trong việc thu hút và giữ chân NNLCLC hiện nay là gì?
-              </div>
+              <div class="label">2. Theo Ông/Bà, thách thức lớn nhất của doanh nghiệp trong việc thu hút và giữ chân NNLCLC hiện nay là gì?</div>
               <textarea class="control" id="OpenQ2" placeholder="Nhập nội dung..."></textarea>
             </div>
 
             <div class="field">
-              <div class="label">
-                3. Doanh nghiệp của Ông/Bà có kế hoạch cụ thể nào để đáp ứng nhu cầu NNLCLC đến năm 2030 không? Xin vui lòng chia sẻ.
-              </div>
+              <div class="label">3. Doanh nghiệp của Ông/Bà có kế hoạch cụ thể nào để đáp ứng nhu cầu NNLCLC đến năm 2030 không? Xin vui lòng chia sẻ.</div>
               <textarea class="control" id="OpenQ3" placeholder="Nhập nội dung..."></textarea>
             </div>
 
             <div class="field">
-              <div class="label">
-                4. Ông/Bà mong muốn được hỗ trợ gì từ chính quyền địa phương và các cơ sở đào tạo để phát triển NNLCLC?
-              </div>
+              <div class="label">4. Ông/Bà mong muốn được hỗ trợ gì từ chính quyền địa phương và các cơ sở đào tạo để phát triển NNLCLC?</div>
               <textarea class="control" id="OpenQ4" placeholder="Nhập nội dung..."></textarea>
             </div>
 
             <div class="field">
-              <div class="label">
-                5. Có kiến nghị nào khác về việc phát triển NNLCLC tại tỉnh Hưng Yên mà Ông/Bà muốn chia sẻ?
-              </div>
+              <div class="label">5. Có kiến nghị nào khác về việc phát triển NNLCLC tại tỉnh Hưng Yên mà Ông/Bà muốn chia sẻ?</div>
               <textarea class="control" id="OpenQ5" placeholder="Nhập nội dung..."></textarea>
             </div>
           </div>
 
-          <!-- VIII. ĐỀ XUẤT/KIẾN NGHỊ -->
+          <!-- VIII -->
           <hr class="sep" />
           <h3 class="block-title">VIII. ĐỀ XUẤT/KIẾN NGHỊ</h3>
           <div class="field" id="proposalSection">
@@ -240,13 +261,7 @@
             <textarea class="control" id="KienNghi" placeholder="Nhập đề xuất/kiến nghị..."></textarea>
           </div>
 
-          <div class="actions">
-            <button class="btn primary" type="submit" id="submitAllBtn">Gửi (Insert + Khảo sát)</button>
-            <button class="btn" type="button" id="resetBtn">Làm lại</button>
-            <button class="btn" type="button" id="scrollToCredentialsBtn">⬆ Quay lại nhập thông tin</button>
-          </div>
-
-          <p class="note">* Nhớ chọn đủ các câu Likert bắt buộc.</p>
+          <p class="note">* Track form chỉ để tra cứu + chỉnh sửa nếu muốn.</p>
           <pre id="output" class="output" hidden></pre>
         </div>
       </div>
@@ -254,6 +269,6 @@
 
   </div>
 
-  <script src="/script/form3.js"></script>
+  <script src="/script/form3_tracker.js"></script>
 </body>
 </html>

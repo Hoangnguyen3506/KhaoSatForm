@@ -7,6 +7,13 @@
   <meta name="description" content="Track4 + Survey4 Combined" />
   <link rel="stylesheet" href="/css/styles4.css" />
   <title>Tracker Form 4</title>
+
+  <style>
+    .open-grid { display: grid; gap: 12px; margin-top: 10px; }
+    .open-grid textarea { width: 100%; min-height: 90px; resize: vertical; }
+    .block-title { margin-top: 14px; }
+    .muted { opacity:.75; font-size: 13px; margin-top: 6px; }
+  </style>
 </head>
 
 <body>
@@ -30,6 +37,10 @@
               <label>ID</label>
               <input id="TrackID" placeholder="Nhập ID (vd: 235)" />
             </div>
+            <div class="col">
+              <label>STT</label>
+              <input id="STT" />
+            </div>
 
             <div class="col" style="display:flex; align-items:flex-end; gap:10px;">
               <button class="btn" type="button" id="btnTrack4">Tra cứu</button>
@@ -47,7 +58,7 @@
             </div>
             <div class="col">
               <label>Ngày khảo sát</label>
-              <input type="date" id="NgayKS" />
+              <input id="NgayKS" />
             </div>
           </div>
 
@@ -127,7 +138,7 @@
     </div>
 
     <!-- =========================
-         2) SURVEY 4 (AGREEMENT)
+         2) SURVEY 4
     ========================== -->
     <div id="agreementSection">
       <form id="surveyForm">
@@ -140,15 +151,54 @@
           <div class="page__body">
             <div id="surveyContainer"></div>
 
-            <div class="actions">
-              <button class="btn primary" type="submit" id="submitAllBtn">Gửi khảo sát</button>
+            <!-- ✅ CÂU 52: TEXT -->
+            <hr class="sep" />
+            <h3 class="block-title">VII. MỨC THU NHẬP (Câu 52)</h3>
+          
+            <div class="field">
+              <label>
+                52. Anh/Chị vui lòng cho biết khoảng mức thu nhập bình quân hàng tháng (bao gồm lương cơ bản, phụ cấp, thưởng và các khoản đãi ngộ khác sau thuế) của Anh/Chị tại doanh nghiệp hiện tại?
+              </label>
+              <textarea id="Cau52" placeholder="Nhập nội dung..." class="control"></textarea>
+            </div>
+
+            <!-- ✅ OPEN ENDED -->
+            <hr class="sep" />
+            <h3 class="block-title">VIII. CÂU HỎI MỞ</h3>
+            <div class="open-grid">
+              <div class="field">
+                <label>1. Anh/Chị vui lòng cho biết mức độ hài lòng chung với doanh nghiệp và công việc hiện tại?</label>
+                <textarea id="Cau53" class="control" placeholder="Nhập nội dung..."></textarea>
+              </div>
+              <div class="field">
+                <label>2. Theo Anh/Chị, điều gì khiến Anh/Chị gắn bó lâu dài với doanh nghiệp hiện tại?</label>
+                <textarea id="Cau54" class="control" placeholder="Nhập nội dung..."></textarea>
+              </div>
+              <div class="field">
+                <label>3. Anh/Chị mong muốn được đào tạo, phát triển thêm những kỹ năng nào để đáp ứng yêu cầu công việc trong tương lai?</label>
+                <textarea id="Cau55" class="control" placeholder="Nhập nội dung..."></textarea>
+              </div>
+              <div class="field">
+                <label>4. Thách thức lớn nhất mà Anh/Chị gặp phải trong việc nâng cao trình độ chuyên môn là gì?</label>
+                <textarea id="Cau56" class="control" placeholder="Nhập nội dung..."></textarea>
+              </div>
+              <div class="field">
+                <label>5. Anh/Chị có kế hoạch phát triển nghề nghiệp như thế nào trong 5 năm tới?</label>
+                <textarea id="Cau57" class="control" placeholder="Nhập nội dung..."></textarea>
+              </div>
+              <div class="field">
+                <label>6. Có ý kiến hoặc đề xuất nào khác về việc phát triển NNLCLC tại tỉnh Hưng Yên mà Anh/Chị muốn chia sẻ?</label>
+                <textarea id="Cau58" class="control" placeholder="Nhập nội dung..."></textarea>
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:14px;">
+             
               <button class="btn" type="button" id="resetBtn">Làm lại</button>
-              <button class="btn" type="button" id="scrollToCredentialsBtn">⬆ Quay lại nhập thông tin</button>
+              <a class="btn" href="#credentials">⬆ Về phần thông tin</a>
             </div>
 
             <div id="resultBottom"></div>
-
-            <p class="note">* Mỗi dòng hãy chọn 1 mức (1–5).</p>
             <pre id="output" class="output" hidden></pre>
           </div>
         </div>
@@ -157,16 +207,6 @@
 
   </div>
 
-  <script>
-    const scrollBtn = document.getElementById("scrollToCredentialsBtn");
-    if (scrollBtn) {
-      scrollBtn.addEventListener("click", () => {
-        document.getElementById("credentials")?.scrollIntoView({ behavior: "smooth" });
-      });
-    }
-  </script>
-
-  <!-- JS mới -->
   <script src="./script/form4_tracker.js"></script>
 </body>
 </html>
